@@ -3,9 +3,12 @@ import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
+const BASE_URL = `http://${window.location.hostname}:5000`;
+
 const EditPost = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+
   const [post, setPost] = useState({
     title: '',
     description: '',
@@ -13,6 +16,7 @@ const EditPost = () => {
     location: '',
     type: ''
   });
+
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
@@ -20,7 +24,7 @@ const EditPost = () => {
     const fetchPost = async () => {
       try {
         const token = localStorage.getItem('authToken');
-        const res = await axios.get(`http://localhost:5000/api/skills/${id}`, {
+        const res = await axios.get(`${BASE_URL}/api/skills/${id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setPost(res.data);
@@ -43,7 +47,7 @@ const EditPost = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('authToken');
-      await axios.put(`http://localhost:5000/api/skills/${id}`, post, {
+      await axios.put(`${BASE_URL}/api/skills/${id}`, post, {
         headers: { Authorization: `Bearer ${token}` }
       });
       toast.success('Post updated successfully!');
@@ -54,70 +58,102 @@ const EditPost = () => {
     }
   };
 
-  if (loading) return <div className="container mt-4"><p>Loading post...</p></div>;
-  if (notFound) return <div className="container mt-4"><p className="text-danger">Post not found.</p></div>;
+  if (loading) {
+    return (
+      <div className="container mt-5">
+        <div className="alert alert-secondary">Loading post...</div>
+      </div>
+    );
+  }
+
+  if (notFound) {
+    return (
+      <div className="container mt-5">
+        <div className="alert alert-danger">Post not found.</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="container mt-4">
-      <h2>Edit Your Post</h2>
-      <form onSubmit={handleSubmit}>
-        <div className="mb-3">
-          <label>Title</label>
-          <input
-            type="text"
-            name="title"
-            value={post.title}
-            onChange={handleChange}
-            className="form-control"
-            required
-          />
+    <div className="container mt-5">
+      <div className="card shadow-sm border-0" style={{ backgroundColor: '#f8f9fa' }}>
+        <div className="card-body">
+          <h3 className="mb-4 text-dark fw-semibold">Edit Your Skill Post</h3>
+          <form onSubmit={handleSubmit}>
+            <div className="form-floating mb-3">
+              <input
+                type="text"
+                name="title"
+                className="form-control"
+                id="titleInput"
+                placeholder="Title"
+                value={post.title}
+                onChange={handleChange}
+                required
+              />
+              <label htmlFor="titleInput">Title</label>
+            </div>
+
+            <div className="form-floating mb-3">
+              <textarea
+                name="description"
+                className="form-control"
+                id="descriptionInput"
+                placeholder="Description"
+                style={{ height: '120px' }}
+                value={post.description}
+                onChange={handleChange}
+                required
+              />
+              <label htmlFor="descriptionInput">Description</label>
+            </div>
+
+            <div className="form-floating mb-3">
+              <input
+                type="text"
+                name="category"
+                className="form-control"
+                id="categoryInput"
+                placeholder="Category"
+                value={post.category}
+                onChange={handleChange}
+              />
+              <label htmlFor="categoryInput">Category</label>
+            </div>
+
+            <div className="form-floating mb-3">
+              <input
+                type="text"
+                name="location"
+                className="form-control"
+                id="locationInput"
+                placeholder="Location"
+                value={post.location}
+                onChange={handleChange}
+              />
+              <label htmlFor="locationInput">Location</label>
+            </div>
+
+            <div className="mb-4">
+              <label className="form-label fw-semibold">Type</label>
+              <select
+                name="type"
+                className="form-select"
+                value={post.type}
+                onChange={handleChange}
+              >
+                <option value="">Select type</option>
+                <option value="offer">Offer</option>
+                <option value="request">Request</option>
+              </select>
+            </div>
+
+            <button type="submit" className="btn btn-dark w-100">
+              Update Post
+            </button>
+          </form>
         </div>
-        <div className="mb-3">
-          <label>Description</label>
-          <textarea
-            name="description"
-            value={post.description}
-            onChange={handleChange}
-            className="form-control"
-            rows="4"
-            required
-          />
-        </div>
-        <div className="mb-3">
-          <label>Category</label>
-          <input
-            type="text"
-            name="category"
-            value={post.category}
-            onChange={handleChange}
-            className="form-control"
-          />
-        </div>
-        <div className="mb-3">
-          <label>Location</label>
-          <input
-            type="text"
-            name="location"
-            value={post.location}
-            onChange={handleChange}
-            className="form-control"
-          />
-        </div>
-        <div className="mb-3">
-          <label>Type</label>
-          <select
-            name="type"
-            value={post.type}
-            onChange={handleChange}
-            className="form-control"
-          >
-            <option value="">Select type</option>
-            <option value="offer">Offer</option>
-            <option value="request">Request</option>
-          </select>
-        </div>
-        <button type="submit" className="btn btn-success">Update Post</button>
-      </form>
+      </div>
     </div>
   );
 };

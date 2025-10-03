@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 
+const BASE_URL = `http://${window.location.hostname}:5000`;
+
 const Register = () => {
   const [formData, setFormData] = useState({
     name: '',
@@ -23,10 +25,9 @@ const Register = () => {
     setLoading(true);
 
     try {
-      await axios.post('http://localhost:5000/api/auth/register', formData);
+      await axios.post(`${BASE_URL}/api/auth/register`, formData);
       toast.success('Registration successful! You can now log in.');
 
-      // Reset all fields
       setFormData({
         name: '',
         email: '',
@@ -46,78 +47,89 @@ const Register = () => {
 
   return (
     <div className="container mt-5" style={{ maxWidth: '500px' }}>
-      <h2 className="text-center mb-4">Join Skill Exchange</h2>
-      <form onSubmit={handleSubmit} className="shadow p-4 rounded bg-light">
-        <div className="mb-3">
-          <label className="form-label">Full Name</label>
-          <input
-            type="text"
-            name="name"
-            className="form-control"
-            value={formData.name}
-            onChange={handleChange}
-            required
-            placeholder="Payal Sharma"
-          />
+      <div className="card shadow-sm border-0 bg-light">
+        <div className="card-body">
+          <h3 className="text-center mb-4 text-dark fw-semibold">Join Skill Exchange</h3>
+          <form onSubmit={handleSubmit}>
+            <div className="form-floating mb-3">
+              <input
+                type="text"
+                name="name"
+                className="form-control"
+                id="nameInput"
+                placeholder="Payal Sharma"
+                value={formData.name}
+                onChange={handleChange}
+                required
+              />
+              <label htmlFor="nameInput">Full Name</label>
+            </div>
+
+            <div className="form-floating mb-3">
+              <input
+                type="email"
+                name="email"
+                className="form-control"
+                id="emailInput"
+                placeholder="payal@example.com"
+                value={formData.email}
+                onChange={handleChange}
+                required
+              />
+              <label htmlFor="emailInput">Email Address</label>
+            </div>
+
+            <div className="form-floating mb-3">
+              <input
+                type="text"
+                name="location"
+                className="form-control"
+                id="locationInput"
+                placeholder="Goa, India"
+                value={formData.location}
+                onChange={handleChange}
+              />
+              <label htmlFor="locationInput">Location</label>
+            </div>
+
+            <div className="form-floating mb-3">
+              <textarea
+                name="bio"
+                className="form-control"
+                id="bioInput"
+                placeholder="Tell us a bit about yourself..."
+                style={{ height: '100px' }}
+                value={formData.bio}
+                onChange={handleChange}
+              />
+              <label htmlFor="bioInput">Short Bio</label>
+            </div>
+
+            <div className="form-floating mb-4">
+              <input
+                type="password"
+                name="password"
+                className="form-control"
+                id="passwordInput"
+                placeholder="••••••••"
+                value={formData.password}
+                onChange={handleChange}
+                required
+              />
+              <label htmlFor="passwordInput">Password</label>
+            </div>
+
+            <button type="submit" className="btn btn-dark w-100" disabled={loading}>
+              {loading ? 'Registering...' : 'Create Account'}
+            </button>
+          </form>
+
+          <p className="text-center mt-3 text-muted">
+            Already have an account?{' '}
+            <a href="/login" className="text-decoration-none">Log in here</a>
+          </p>
         </div>
-
-        <div className="mb-3">
-          <label className="form-label">Email Address</label>
-          <input
-            type="email"
-            name="email"
-            className="form-control"
-            value={formData.email}
-            onChange={handleChange}
-            required
-            placeholder="payal@example.com"
-          />
-        </div>
-
-        <div className="mb-3">
-          <label className="form-label">Location</label>
-          <input
-            type="text"
-            name="location"
-            className="form-control"
-            value={formData.location}
-            onChange={handleChange}
-            placeholder="Goa, India"
-          />
-        </div>
-
-        <div className="mb-3">
-          <label className="form-label">Short Bio</label>
-          <textarea
-            name="bio"
-            className="form-control"
-            value={formData.bio}
-            onChange={handleChange}
-            placeholder="Tell us a bit about yourself..."
-          />
-        </div>
-
-        <div className="mb-3">
-          <label className="form-label">Password</label>
-          <input
-            type="password"
-            name="password"
-            className="form-control"
-            value={formData.password}
-            onChange={handleChange}
-            required
-            placeholder="••••••••"
-          />
-        </div>
-
-        <button type="submit" className="btn btn-primary w-100" disabled={loading}>
-          {loading ? 'Registering...' : 'Create Account'}
-        </button>
-      </form>
-
-      <p className="text-center mt-3 text-muted">
-        Already have an account? <a href="/login">Log in here</a>
-      </p>
+      </div>
     </div>
   );
 };

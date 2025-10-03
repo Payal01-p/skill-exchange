@@ -1,9 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { getMe } = require('../controllers/userController');
 const auth = require('../middleware/auth');
+const { getMatches } = require('../controllers/matchController');
 
-// GET /api/me — fetch current user info
-router.get('/', auth, getMe);
+router.get('/', auth, getMatches); // GET /api/match
 
 module.exports = router;

@@ -1,60 +1,36 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import ChatList from '../components/ChatList';
+import ChatBox from '../components/ChatBox';
 
-const ChatPage = () => {
-  const [text, setText] = useState('');
-  const [messages, setMessages] = useState([]);
-  const [confirmed, setConfirmed] = useState(false);
-
-  const sendMessage = async () => {
-    if (!text.trim()) return;
-    const token = localStorage.getItem('authToken');
-    const newMessage = { sender: 'You', text };
-
-    setMessages([...messages, newMessage]);
-    setText('');
-
-    // Optional: send to backend
-  };
-
-  const confirmTeaching = async () => {
-    try {
-      const token = localStorage.getItem('authToken');
-      await axios.put('http://localhost:5000/api/skills/hide', {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setConfirmed(true);
-    } catch (error) {
-      console.error('Failed to confirm teaching:', error);
-    }
-  };
+const ChatPage = ({ user, token }) => {
+  const [selectedUser, setSelectedUser] = useState(null);
 
   return (
     <div className="container mt-4">
-      <h4>Chat with the teacher</h4>
-      {!confirmed ? (
-        <button className="btn btn-success mb-3" onClick={confirmTeaching}>
-          Confirm Teaching
-        </button>
-      ) : (
-        <p className="text-success">Teaching confirmed. Post hidden.</p>
-      )}
+      <div
+        className="d-flex flex-wrap"
+        style={{
+          gap: '20px',
+          flexDirection: 'row',
+          justifyContent: 'space-between'
+        }}
+      >
+        {/* Chat List */}
+        <div style={{ flex: '1 1 30%', minWidth: '250px', borderRight: '1px solid #ccc', paddingRight: '10px' }}>
+          <h5>Chats</h5>
+          <ChatList user={user} token={token} onSelectChat={setSelectedUser} />
+        </div>
 
-      <div className="border p-3 mb-3" style={{ minHeight: '200px' }}>
-        {messages.map((msg, idx) => (
-          <p key={idx}><strong>{msg.sender}:</strong> {msg.text}</p>
-        ))}
-      </div>
-
-      <div className="input-group">
-        <input
-          type="text"
-          className="form-control"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="Type your message..."
-        />
-        <button className="btn btn-primary" onClick={sendMessage}>Send</button>
+        {/* Chat Box */}
+        <div style={{ flex: '1 1 65%', minWidth: '300px' }}>
+          {selectedUser ? (
+            <ChatBox user={user} partner={selectedUser} token={token} />
+          ) : (
+            <div style={{ padding: '20px', color: '#666' }}>
+              <h6>Select a chat to start messaging</h6>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

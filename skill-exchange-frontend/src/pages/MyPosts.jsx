@@ -1,46 +1,37 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import SkillCard from '../components/SkillCard';
 import { useNavigate } from 'react-router-dom';
+
+const BASE_URL = `http://${window.location.hostname}:5000`;
 
 const MyPosts = () => {
   const [mySkills, setMySkills] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
-  const fetchUser = async () => {
-    try {
-      const token = localStorage.getItem('authToken');
-      const res = await axios.get('http://localhost:5000/api/me', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setUser(res.data);
-    } catch (error) {
-      console.error('Error fetching user:', error);
-    }
-  };
+  useEffect(() => {
+    const fetchMySkills = async () => {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem('authToken');
+        const res = await axios.get(`${BASE_URL}/api/skills/mine`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setMySkills(res.data);
+      } catch (error) {
+        console.error('Error fetching skills:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const fetchMySkills = async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem('authToken');
-      const res = await axios.get('http://localhost:5000/api/skills', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const mine = res.data.filter((skill) => skill.postedBy?._id === user?._id);
-      setMySkills(mine);
-    } catch (error) {
-      console.error('Error fetching skills:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    fetchMySkills();
+  }, []);
 
   const handleDelete = async (id) => {
     try {
       const token = localStorage.getItem('authToken');
-      await axios.delete(`http://localhost:5000/api/skills/${id}`, {
+      await axios.delete(`${BASE_URL}/api/skills/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMySkills((prev) => prev.filter((skill) => skill._id !== id));
@@ -49,51 +40,36 @@ const MyPosts = () => {
     }
   };
 
-  useEffect(() => {
-    fetchUser();
-  }, []);
-
-  useEffect(() => {
-    if (user) {
-      fetchMySkills();
-    }
-  }, [user]);
-
   return (
-    <div className="container mt-4">
-      <h2>Your Skill Posts</h2>
+    <div className="container mt-5">
+      <h3 className="mb-4 text-dark fw-semibold">Your Skill Posts</h3>
       {loading ? (
-        <p>Loading your posts...</p>
+        <div className="alert alert-secondary">Loading your posts...</div>
       ) : mySkills.length === 0 ? (
-        <p className="text-muted">You haven’t posted any skills yet.</p>
+        <div className="alert alert-warning">You haven’t posted any skills yet.</div>
       ) : (
         <div className="row">
           {mySkills.map((skill) => (
-            <div className="col-md-4 mb-3" key={skill._id}>
-              <div className="card h-100">
+            <div className="col-md-4 mb-4" key={skill._id}>
+              <div className="card h-100 shadow-sm border-0" style={{ backgroundColor: '#f8f9fa' }}>
                 <div className="card-body">
-                  <h5 className="card-title">{skill.title}</h5>
-                  <p className="card-text">{skill.description}</p>
-                  <p className="card-text">
-                    <strong>Category:</strong> {skill.category}
-                  </p>
-                  <p className="card-text">
-                    <strong>Location:</strong> {skill.location}
-                  </p>
-                  <p className="card-text">
-                    <strong>Type:</strong> {skill.type}
-                  </p>
+                  <h5 className="card-title text-dark">{skill.title}</h5>
+                  <p className="card-text text-muted">{skill.description}</p>
+                  <ul className="list-unstyled mb-3">
+                    <li><strong>Category:</strong> {skill.category}</li>
+                    <li><strong>Location:</strong> {skill.location}</li>
+                    <li><strong>Type:</strong> {skill.type}</li>
+                  </ul>
 
-                  {/* 🛠️ Edit & Delete Buttons */}
-                  <div className="d-flex justify-content-between mt-3">
+                  <div className="d-flex justify-content-between">
                     <button
-                      className="btn btn-outline-primary btn-sm"
+                      className="btn btn-sm btn-outline-dark"
                       onClick={() => navigate(`/edit/${skill._id}`)}
                     >
                       Edit
                     </button>
                     <button
-                      className="btn btn-outline-danger btn-sm"
+                      className="btn btn-sm btn-outline-danger"
                       onClick={() => handleDelete(skill._id)}
                     >
                       Delete

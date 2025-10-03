@@ -1,12 +1,13 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useContext } from 'react';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { toast } from 'react-toastify';
-import axios from 'axios';
+
+// ✅ Bootstrap JS (needed for toggle functionality)
+import 'bootstrap/dist/js/bootstrap.bundle.min';
 
 const Navbar = () => {
-  const { isAuthenticated, logout } = useContext(AuthContext);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const { isAuthenticated, logout, user } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -19,66 +20,81 @@ const Navbar = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        const token = localStorage.getItem('authToken');
-        const res = await axios.get('http://localhost:5000/api/messages/notifications', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setUnreadCount(res.data.length);
-      } catch (error) {
-        console.error('Failed to fetch notifications:', error);
-      }
-    };
-
-    if (isAuthenticated) {
-      fetchNotifications();
-    }
-  }, [isAuthenticated]);
+  const hasUnread = user?.unreadCount > 0;
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-dark bg-primary">
+    <nav className="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
       <div className="container-fluid">
-        <Link className="navbar-brand" to={isAuthenticated ? '/dashboard' : '/'}>
+        <Link className="navbar-brand fw-bold" to={isAuthenticated ? '/dashboard' : '/'}>
           Skill Exchange
         </Link>
-        <div className="collapse navbar-collapse">
-          <ul className="navbar-nav ms-auto">
+
+        <button
+          className="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+          aria-controls="navbarNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span className="navbar-toggler-icon"></span>
+        </button>
+
+        <div className="collapse navbar-collapse" id="navbarNav">
+          <ul className="navbar-nav ms-auto align-items-center">
             {isAuthenticated ? (
               <>
-                <li className="nav-item">
-                  <Link className="nav-link" to="/create">Create Skill</Link>
+                <li className="nav-item mx-2 text-white">
+                  <span className="fw-semibold">Welcome, {user?.name || 'User'}!</span>
                 </li>
-                <li className="nav-item">
-                  <Link className="nav-link" to="/my-posts">Your Posts</Link>
+                <li className="nav-item mx-2">
+                  <NavLink to="/create" className="nav-link">Create Skill</NavLink>
                 </li>
-                <li className="nav-item">
-                  <Link className="nav-link" to="/dashboard">Dashboard</Link>
+                <li className="nav-item mx-2">
+                  <NavLink to="/match" className="nav-link">Smart Match</NavLink>
                 </li>
-                <li className="nav-item">
-                  <Link className="nav-link position-relative" to="/notifications">
-                    Notifications
-                    {unreadCount > 0 && (
-                      <span className="badge bg-danger position-absolute top-0 start-100 translate-middle">
-                        {unreadCount}
+                <li className="nav-item mx-2">
+                  <NavLink to="/my-posts" className="nav-link">Your Posts</NavLink>
+                </li>
+                <li className="nav-item mx-2">
+                  <NavLink to="/dashboard" className="nav-link">Dashboard</NavLink>
+                </li>
+                <li className="nav-item mx-2 position-relative">
+                  <NavLink to="/chat" className="nav-link position-relative">
+                    Chat
+                    {hasUnread && (
+                      <span
+                        style={{
+                          position: 'absolute',
+                          top: '-4px',
+                          right: '-12px',
+                          backgroundColor: '#dc3545',
+                          color: 'white',
+                          borderRadius: '50%',
+                          padding: '2px 6px',
+                          fontSize: '12px',
+                          lineHeight: '1',
+                        }}
+                      >
+                        {user.unreadCount}
                       </span>
                     )}
-                  </Link>
+                  </NavLink>
                 </li>
-                <li className="nav-item">
-                  <button className="btn btn-outline-light ms-2" onClick={handleLogout}>
+                <li className="nav-item mx-2">
+                  <button className="btn btn-outline-light" onClick={handleLogout}>
                     Logout
                   </button>
                 </li>
               </>
             ) : (
               <>
-                <li className="nav-item">
-                  <Link className="nav-link" to="/login">Login</Link>
+                <li className="nav-item mx-2">
+                  <NavLink to="/login" className="nav-link">Login</NavLink>
                 </li>
-                <li className="nav-item">
-                  <Link className="nav-link" to="/register">Register</Link>
+                <li className="nav-item mx-2">
+                  <NavLink to="/register" className="nav-link">Register</NavLink>
                 </li>
               </>
             )}

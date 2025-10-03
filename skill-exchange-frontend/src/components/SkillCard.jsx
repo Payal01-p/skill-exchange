@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
+
+const BASE_URL = `http://${window.location.hostname}:5000`;
 
 const SkillCard = ({ skill }) => {
   const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
 
   const posterName =
     skill.postedBy?.name ||
@@ -14,7 +18,7 @@ const SkillCard = ({ skill }) => {
   const [commentText, setCommentText] = useState('');
   const [comments, setComments] = useState(skill.comments || []);
   const [submitting, setSubmitting] = useState(false);
-  const [showAll, setShowAll] = useState(false);
+  const [showComments, setShowComments] = useState(false);
 
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
@@ -24,7 +28,7 @@ const SkillCard = ({ skill }) => {
       setSubmitting(true);
       const token = localStorage.getItem('authToken');
       const res = await axios.post(
-        `http://localhost:5000/api/skills/${skill._id}/comment`,
+        `${BASE_URL}/api/skills/${skill._id}/comment`,
         { text: commentText },
         {
           headers: { Authorization: `Bearer ${token}` }
@@ -32,7 +36,7 @@ const SkillCard = ({ skill }) => {
       );
       setComments(res.data.comments);
       setCommentText('');
-      setShowAll(true); // Show all after posting
+      setShowComments(true);
     } catch (error) {
       console.error('Failed to post comment:', error);
     } finally {
@@ -41,76 +45,101 @@ const SkillCard = ({ skill }) => {
   };
 
   const handleConnect = () => {
-    navigate(`/chat/${skill.postedBy?._id}`);
+    navigate(`/profile/${skill.postedBy?._id}`);
   };
 
-  const visibleComments = showAll ? comments : comments.slice(0, 3);
+  const handleConnectAndChat = async () => {
+    const initiatorEmail = user?.email;
+    const targetEmail = skill?.postedBy?.email;
+
+    if (!initiatorEmail || !targetEmail) {
+      console.error('❌ Missing emails:', { initiatorEmail, targetEmail });
+      return;
+    }
+
+    try {
+      await axios.post(`${BASE_URL}/api/chats/seed`, {
+        initiatorEmail,
+        targetEmail
+      });
+
+      navigate('/chat');
+    } catch (err) {
+      console.error('❌ Failed to initiate chat:', err.response?.data || err.message);
+    }
+  };
 
   return (
-    <div className="card h-100">
+    <div className="card h-100 border-0 shadow-sm" style={{ backgroundColor: '#f8f9fa' }}>
       <div className="card-body">
-        <h5 className="card-title">{skill.title || 'Untitled Skill'}</h5>
-        <p className="card-text">{skill.description || 'No description provided.'}</p>
+        <h5 className="card-title text-dark fw-semibold">{skill.title || 'Untitled Skill'}</h5>
+        <p className="card-text text-muted">{skill.description || 'No description provided.'}</p>
 
-        <p className="card-text">
-          <strong>Category:</strong> {skill.category || 'Uncategorized'}
-        </p>
-        <p className="card-text">
-          <strong>Location:</strong> {skill.location || 'Unknown'}
-        </p>
-        <p className="card-text">
-          <strong>Type:</strong> {skill.type || 'N/A'}
-        </p>
+        <ul className="list-unstyled mb-3">
+          <li><strong>Category:</strong> {skill.category || 'Uncategorized'}</li>
+          <li><strong>Location:</strong> {skill.location || 'Unknown'}</li>
+          <li><strong>Type:</strong> {skill.type || 'N/A'}</li>
+        </ul>
 
         <p className="card-text">
           <small className="text-muted">Posted by: {posterName}</small>
         </p>
 
+        {/* 🔄 Toggle Comments */}
+        <button
+          className="btn btn-sm btn-outline-dark mb-3"
+          onClick={() => setShowComments(!showComments)}
+        >
+          {showComments ? 'Hide Comments' : 'Show Comments'}
+        </button>
+
         {/* 💬 Comments Section */}
-        <hr />
-        <h6>Comments</h6>
-        {comments.length === 0 ? (
-          <p className="text-muted">No comments yet.</p>
-        ) : (
+        {showComments && (
           <>
-            <ul className="list-unstyled">
-              {visibleComments.map((comment, idx) => (
-                <li key={idx}>
-                  <strong>{comment.postedBy?.name || 'Anonymous'}:</strong> {comment.text}
-                </li>
-              ))}
-            </ul>
-            {comments.length > 3 && !showAll && (
-              <button
-                className="btn btn-sm btn-outline-secondary"
-                onClick={() => setShowAll(true)}
-              >
-                Show more comments
-              </button>
+            <h6 className="text-dark">Comments</h6>
+            {comments.length === 0 ? (
+              <p className="text-muted">No comments yet.</p>
+            ) : (
+              <ul className="list-group list-group-flush">
+                {comments.map((comment, idx) => (
+                  <li key={idx} className="list-group-item px-0">
+                    <strong>{comment.postedBy?.name || 'Anonymous'}:</strong> {comment.text}
+                  </li>
+                ))}
+              </ul>
             )}
+
+            {/* 📝 Comment Form */}
+            <form onSubmit={handleCommentSubmit} className="mt-3">
+              <div className="input-group">
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Write a comment..."
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  disabled={submitting}
+                />
+                <button className="btn btn-dark" type="submit" disabled={submitting}>
+                  {submitting ? 'Posting...' : 'Post'}
+                </button>
+              </div>
+            </form>
           </>
         )}
 
-        {/* 📝 Comment Form */}
-        <form onSubmit={handleCommentSubmit} className="mt-3">
-          <div className="input-group">
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Write a comment..."
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              disabled={submitting}
-            />
-            <button className="btn btn-primary" type="submit" disabled={submitting}>
-              {submitting ? 'Posting...' : 'Post'}
-            </button>
-          </div>
-        </form>
-
-        {/* 🔗 Connect Button */}
-        <button className="btn btn-outline-primary mt-3" onClick={handleConnect}>
-          Connect
+        {/* 🔗 Connect Buttons */}
+        <button
+          className="btn btn-outline-dark mt-4 w-100"
+          onClick={handleConnect}
+        >
+          View Profile
+        </button>
+        <button
+          className="btn btn-success mt-2 w-100"
+          onClick={handleConnectAndChat}
+        >
+          Connect & Chat
         </button>
       </div>
     </div>

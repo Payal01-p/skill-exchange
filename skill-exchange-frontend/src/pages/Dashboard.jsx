@@ -3,6 +3,8 @@ import axios from 'axios';
 import SkillCard from '../components/SkillCard';
 import { useNavigate } from 'react-router-dom';
 
+const BASE_URL = `http://${window.location.hostname}:5000`;
+
 const Dashboard = () => {
   const [skills, setSkills] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,7 +21,7 @@ const Dashboard = () => {
     const fetchUser = async () => {
       try {
         const token = localStorage.getItem('authToken');
-        const res = await axios.get('http://localhost:5000/api/me', {
+        const res = await axios.get(`${BASE_URL}/api/me`, {
           headers: {
             Authorization: `Bearer ${token}`
           },
@@ -39,7 +41,7 @@ const Dashboard = () => {
       setLoading(true);
       try {
         const query = new URLSearchParams(filters).toString();
-        const res = await axios.get(`http://localhost:5000/api/skills?${query}`);
+        const res = await axios.get(`${BASE_URL}/api/skills?${query}`);
         const visibleSkills = res.data.filter(skill => !skill.hidden);
         setSkills(visibleSkills);
       } catch (error) {
@@ -59,66 +61,82 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="container mt-4">
-      <h2>
-        Welcome{user?.name ? `, ${user.name}` : ''} 👋
-      </h2>
-      <button className="btn btn-success mb-4" onClick={() => navigate('/create')}>
-        Post a Skill
-      </button>
+    <div className="container mt-5">
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h2 className="fw-bold text-dark">
+          Welcome{user?.name ? `, ${user.name}` : ''} 👋
+        </h2>
+        <button className="btn btn-dark" onClick={() => navigate('/create')}>
+          Post a Skill
+        </button>
+      </div>
 
       {/* 🔍 Filter Controls */}
-      <div className="row mb-4">
-        <div className="col-md-4">
-          <label>Category</label>
-          <select
-            name="category"
-            className="form-control"
-            value={filters.category}
-            onChange={handleFilterChange}
-          >
-            <option value="">All</option>
-            <option value="Design">Design</option>
-            <option value="Coding">Coding</option>
-            <option value="Writing">Writing</option>
-          </select>
-        </div>
-        <div className="col-md-4">
-          <label>Type</label>
-          <select
-            name="type"
-            className="form-control"
-            value={filters.type}
-            onChange={handleFilterChange}
-          >
-            <option value="">All</option>
-            <option value="offer">Offer</option>
-            <option value="request">Request</option>
-          </select>
-        </div>
-        <div className="col-md-4">
-          <label>Location</label>
-          <input
-            type="text"
-            name="location"
-            className="form-control"
-            placeholder="Enter location"
-            value={filters.location}
-            onChange={handleFilterChange}
-          />
+      <div className="card shadow-sm border-0 mb-5" style={{ backgroundColor: '#f8f9fa' }}>
+        <div className="card-body">
+          <h5 className="mb-3 text-dark fw-semibold">Filter Skills</h5>
+          <div className="row g-3">
+            <div className="col-md-4">
+              <div className="form-floating">
+                <select
+                  name="category"
+                  className="form-select"
+                  value={filters.category}
+                  onChange={handleFilterChange}
+                  id="categorySelect"
+                >
+                  <option value="">All</option>
+                  <option value="Design">Design</option>
+                  <option value="Coding">Coding</option>
+                  <option value="Writing">Writing</option>
+                </select>
+                <label htmlFor="categorySelect">Category</label>
+              </div>
+            </div>
+            <div className="col-md-4">
+              <div className="form-floating">
+                <select
+                  name="type"
+                  className="form-select"
+                  value={filters.type}
+                  onChange={handleFilterChange}
+                  id="typeSelect"
+                >
+                  <option value="">All</option>
+                  <option value="offer">Offer</option>
+                  <option value="request">Request</option>
+                </select>
+                <label htmlFor="typeSelect">Type</label>
+              </div>
+            </div>
+            <div className="col-md-4">
+              <div className="form-floating">
+                <input
+                  type="text"
+                  name="location"
+                  className="form-control"
+                  placeholder="Enter location"
+                  value={filters.location}
+                  onChange={handleFilterChange}
+                  id="locationInput"
+                />
+                <label htmlFor="locationInput">Location</label>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* 🌍 All Skill Posts */}
-      <h4>Explore Skills</h4>
+      <h4 className="mb-3 text-dark fw-semibold">Explore Skills</h4>
       {loading ? (
-        <p>Loading skills...</p>
+        <div className="text-muted">Loading skills...</div>
       ) : skills.length === 0 ? (
-        <p>No skill posts found.</p>
+        <div className="text-muted">No skill posts found.</div>
       ) : (
         <div className="row">
           {skills.map((skill) => (
-            <div className="col-md-4 mb-3" key={skill._id}>
+            <div className="col-md-4 mb-4" key={skill._id}>
               <SkillCard skill={skill} currentUser={user} />
             </div>
           ))}
